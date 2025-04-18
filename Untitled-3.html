@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Thông Tin Thời Tiết</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to right, #74ebd5, #acb6e5);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #fff;
+            margin-bottom: 20px;
+        }
+
+        #weather-container {
+            margin-top: 20px;
+        }
+
+        .weather {
+            background: #ffffffcc;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            max-width: 320px;
+            margin: auto;
+        }
+
+        .weather img {
+            width: 80px;
+            height: 80px;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            width: 250px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            padding: 10px 15px;
+            margin-left: 10px;
+            border: none;
+            background-color: #3498db;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Xem Thời Tiết</h1>
+
+    <div>
+        <input type="text" id="cityInput" placeholder="Nhập tên thành phố...">
+        <button onclick="getWeather()">Xem</button>
+    </div>
+
+    <div id="weather-container"></div>
+
+    <script>
+        const apiKey = "6bcc7ce459d789fd82bfdaf1290ff273";
+        const container = document.getElementById("weather-container");
+
+        function getWeather() {
+            const city = document.getElementById("cityInput").value.trim();
+            if (!city) {
+                alert("Vui lòng nhập tên thành phố!");
+                return;
+            }
+
+            container.innerHTML = "<p>Đang tải dữ liệu thời tiết...</p>";
+
+            const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric&lang=vi`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.cod !== 200) {
+                        throw new Error(data.message);
+                    }
+
+                    const weather = data.weather[0].description;
+                    const temp = data.main.temp;
+                    const feelsLike = data.main.feels_like;
+                    const humidity = data.main.humidity;
+                    const wind = data.wind.speed;
+                    const icon = data.weather[0].icon;
+                    const iconUrl = `https://openweathermap.org/img/wn/${icon}@2x.png`;
+                    const updateTime = new Date().toLocaleString("vi-VN");
+
+                    const cityWeather = document.createElement("div");
+                    cityWeather.className = "weather";
+                    cityWeather.innerHTML = `
+                        <h2>${data.name}</h2>
+                        <img src="${iconUrl}" alt="icon thời tiết">
+                        <p><strong>Thời tiết:</strong> ${weather}</p>
+                        <p><strong>Nhiệt độ:</strong> ${temp}°C (cảm giác: ${feelsLike}°C)</p>
+                        <p><strong>Độ ẩm:</strong> ${humidity}%</p>
+                        <p><strong>Gió:</strong> ${wind} m/s</p>
+                        <p><em>Cập nhật lúc: ${updateTime}</em></p>
+                    `;
+
+                    container.innerHTML = "";
+                    container.appendChild(cityWeather);
+                })
+                .catch(error => {
+                    container.innerHTML = `<div class="weather error"><p>Không thể lấy dữ liệu thời tiết cho thành phố: <strong>${city}</strong><br>Lỗi: ${error.message}</p></div>`;
+                    console.error("Chi tiết lỗi:", error);
+                });
+        }
+
+        // Cho phép nhấn Enter để tìm kiếm
+        document.getElementById("cityInput").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                getWeather();
+            }
+        });
+    </script>
+
+</body>
+</html>
